@@ -6,7 +6,8 @@
 
 
 
-Database::Database(std::string database, std::string collection) {
+Database::Database(std::string database, std::string collection)
+{
     //connect to a running mongodb instance
     this->client = {mongocxx::uri{"mongodb://localhost:27017"}};
     //access the project database and dictionary collection
@@ -27,18 +28,39 @@ void Database::insertDocument(json j)
     auto result = this->coll.insert_one(std::move(val));
 }
 
-int Database::documentExists(json j) {
+int Database::documentExists(json j)
+{
     //depending on the word id that is returned by the API here. since we only use ahd dictionary we know all words will have one
     //this is better than searching for the word since we can have one word with multiple definitions in the dbs
-    if (this->coll.find_one(bsoncxx::builder::stream::document{} << "id" << j["id"].get<std::string>() << bsoncxx::builder::stream::finalize)) {
+    if (this->coll.find_one(bsoncxx::builder::stream::document{} << "id" << j["id"].get<std::string>()
+            << bsoncxx::builder::stream::finalize)) {
         return 1;
     } else {
         return 0;
     }
 }
 
-void Database::printDB() {
-    mongocxx::cursor list = this->all();
+std::vector<json> Database::printDocs()
+{
+    std::vector<json> documents;
 
-    //for (<bsoncxx::BSO)
+    auto list = this->all();
+
+    if (list.begin() == list.end()) {
+        std::cout << "There are no words in the database yet.\n" << std::endl;
+    } else {
+        int i = 1;
+        for (auto doc : list) {
+            json j = json::parse(bsoncxx::to_json(doc));
+
+            documents.push_back(j);
+
+//        std::cout << j.dump(4) << std::endl;
+
+            std::cout << i << ". " << j["word"].get<std::string>() << " (" << j["partOfSpeech"].get<std::string>()
+                    << ")  -  " << j["text"].get<std::string>() << std::endl;
+            i++;
+        }
+    }
+    return documents;
 }

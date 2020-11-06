@@ -4,12 +4,14 @@
 
 #include "WebDict.hpp"
 
-size_t web::writeFunction(void *ptr, size_t size, size_t nmemb, std::string* data) {
+size_t web::writeFunction(void* ptr, size_t size, size_t nmemb, std::string* data)
+{
     data->append((char*)ptr, size * nmemb);
     return size * nmemb;
 }
 
-json web::getDefinitions(const std::string word) {
+json web::getDefinitions(const std::string word)
+{
     const std::string base_URL("http://api.wordnik.com/v4/word.json/");
     std::string api_key = ""; //TODO: add check here - if string is empty, tell user to enter api key
     std::string lookup_URL = base_URL + word + "/" +
@@ -61,40 +63,56 @@ json web::getDefinitions(const std::string word) {
         return result;
 
     }
-    else
-    {
+    else {
         exit(EXIT_FAILURE);
     }
 }
 
-void web::prettyPrint(json entry_data)
+int web::prettyPrint(json entry_data)
 {
     int i = 1;
 
     //std::cout << result.dump(4) << std::endl;
 
-    for (auto j : entry_data)
-    {
+    for (auto j : entry_data) {
 
         std::string word = "word not found in json";
         std::string pos = "part of speech not found in json";
         std::string def;
-        if (keyExists(j, "text")) { //omit entries that don't have a definition
-            j.at("text").get_to(def); //TODO: come back and change this so pretty print doesn't skip numbers from omitted entries
+        j.at("text").get_to(def); // don't have to check for "text" - already handled by removeEmpties()
 
-            if (keyExists(j, "word")) {
-                j.at("word").get_to(word);
-            }
-
-            if (keyExists(j, "partOfSpeech")) {
-                j.at("partOfSpeech").get_to(pos);
-
-            }
-            std::cout << i << ". " << word << " (" << pos << "): " << def << std::endl;
+        if (keyExists(j, "word")) {
+            j.at("word").get_to(word);
         }
+
+        if (keyExists(j, "partOfSpeech")) {
+            j.at("partOfSpeech").get_to(pos);
+
+        }
+        std::cout << i << ". " << word << " (" << pos << "): " << def << std::endl;
         i++;
     }
     std::cout << "\n\n" << std::endl;
+    return i;
+}
+
+void web::removeEmpties(json& j)
+{
+    auto iter = j.begin();
+
+    for (; iter != j.end(); ) {
+        if (!keyExists(iter.value(), "text")) {
+            iter = j.erase(iter); //make sure we don't go out of bound by traversing this way
+        } else {
+            ++iter;
+        }
+    }
+//    for (auto iter = entry_data.begin(); iter != entry_data.end(); iter++)
+//    {
+//        if (!keyExists(iter.value(), "text"))
+//            entry_data.erase(iter);
+//
+//    }
 }
 
 bool web::keyExists(const json& j, const std::string& key)

@@ -27,7 +27,7 @@ public:
     Database(std::string database, std::string collection);
     void insertDocument(json j);
     int documentExists(json j);
-    void printDB();
+    std::vector<json> printDocs();
 
     mongocxx::cursor all() {return coll.find({}); } //debugging
 

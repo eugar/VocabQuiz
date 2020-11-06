@@ -17,9 +17,10 @@ const u_short g_max_entries = 8;
 
 
 namespace web {
-    size_t writeFunction(void *ptr, size_t size, size_t nmemb, std::string* data);
+    size_t writeFunction(void* ptr, size_t size, size_t nmemb, std::string* data);
     json getDefinitions(std::string word);
-    void prettyPrint(json entry_data);
+    int prettyPrint(json entry_data);
+    void removeEmpties(json& entry_data);
     bool keyExists(const json& j, const std::string& key);
 }
 

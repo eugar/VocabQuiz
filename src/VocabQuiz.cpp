@@ -1,7 +1,8 @@
 #include "VocabQuiz.hpp"
 
 
-int main() {
+int main()
+{
     try {
         static mongocxx::instance instance{};
         //establish connection to db
@@ -32,27 +33,36 @@ int main() {
                 if (!getline(std::cin, word)) exit(EXIT_FAILURE);
                 json result = web::getDefinitions(word);
 
+                web::removeEmpties(result); //remove results without a definition
+
                 if (!result.empty()) {
-                    web::prettyPrint(result); //TODO: come back and add the ability to strip the definition of html tags
+                    int max = web::prettyPrint(result); //TODO: come back and add the ability to strip the definition of html tags
                     int def_num = 0;
                     std::cout << "Which definition would you like to add? (0) to skip: ";
                     std::cin >> def_num;
 
-                    if (def_num > 0 && def_num < g_max_entries) {
+                    if (def_num > 0 && def_num < max) {
                         //store the word to both dbs
 
-                        if (db.documentExists(result[def_num -1]))
-                        {
+                        if (db.documentExists(result[def_num - 1])) {
                             std::cout << "That word/definition combination already exists in the database\n\n";
                         } else {
                             db.insertDocument(result[def_num - 1]);
                             all_words.insertDocument(result[def_num - 1]);
                             std::cout << "Word has been added to dictionary.\n\n" << std::endl;
                         }
+                    } else {
+                        std::cout << "Please enter a valid number.\n\n" << std::endl;
                     }
+                } else {
+                    std::cout << "No valid results for this word.\n\n" << std::endl;
                 }
             } else if (choice == 3) {
-                //db.
+                db.printDocs();
+            } else if (choice == 4) {
+
+            } else {
+                std::cout << "Please enter a valid option" << std::endl;
             }
         }
     } catch(const std::exception& ex) {
